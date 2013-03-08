@@ -1,6 +1,8 @@
 Take a photo with your Mac's built in camera, upload it, and paste it into
 the current Flint ([a great Campfire client](http://giantcomet.com/flint)) tab.
 
+![face](http://adambachman.org/images/snaps/2013-03-08-12-06-42_snapshot.jpg)
+
 ## Install
 
     $ git clone git://github.com/abachman/snap-copy-paste.git
