@@ -1,45 +1,6 @@
 #!/usr/bin/env ruby
 
-# Take a photo with your Mac's built in camera, upload it, and paste it into
-# the current Flint tab.
-#
-# Usage:
-#
-#   # setup environment
-#   $ echo "# this is a YAML config file, don't hack with it" > ~/.snaprc
-#   $ echo 'REMOTE_IMAGE_URI: "http://example.com/images/snaps/"' >> ~/.snaprc
-#   $ echo 'REMOTE_IMAGE_HOST: "mywebhost"' >> ~/.snaprc
-#   $ echo 'REMOTE_IMAGE_PATH: "~/example.com/images/snaps/"' >> ~/.snaprc
-#
-#   # run script
-#   $ snap-copy-paste
-#
-# If you don't want to assign the environment variables permanently, you can
-# assign them ad hoc like this:
-#
-#   REMOTE_IMAGE_URI="http://example.com/images/snaps/" \
-#     REMOTE_IMAGE_HOST="mywebhost" \
-#     REMOTE_IMAGE_PATH="~/example.com/images/snaps/" \
-#     snap-copy-paste
-#
-# snap-copy-paste requires the "imagesnap" app:
-#
-#   wget https://github.com/rharder/imagesnap/raw/master/imagesnap
-#   chmod a+x imagesnap
-#   sudo mv imagesnap /usr/bin/imagesnap
-#
-#   # source available at: https://github.com/rharder/imagesnap
-#
-#
-# If imagemagick is installed, the image will be constrained to 1024x768.
-# The easiest way to install imagemagick is to install homebrew and run:
-#
-#   brew install libjpeg
-#   brew install imagemagick
-#
-
 # load config
-
 config_file = File.expand_path("~/.snaprc")
 if File.exists?(config_file)
   require 'yaml'
