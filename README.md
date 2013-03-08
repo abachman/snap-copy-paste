@@ -11,12 +11,13 @@ the current Flint ([a great Campfire client](http://giantcomet.com/flint)) tab.
 
 ## Usage
 
-setup environment
+The install process will create a config file. It should be at `~/.snaprc` and
+it should look like this:
 
-    $ echo "# this is a YAML config file" > ~/.snaprc
-    $ echo 'REMOTE_IMAGE_HOST: "mywebhost"' >> ~/.snaprc
-    $ echo 'REMOTE_IMAGE_PATH: "~/example.com/images/snaps/"' >> ~/.snaprc
-    $ echo 'REMOTE_IMAGE_URI: "http://example.com/images/snaps/"' >> ~/.snaprc
+    # this is YAML
+    REMOTE_IMAGE_HOST: "mywebhost"
+    REMOTE_IMAGE_PATH: "~/example.com/images/snaps/"
+    REMOTE_IMAGE_URI:  "http://example.com/images/snaps/"
 
 `REMOTE_IMAGE_HOST` is a server you have SCP and SSH access to.
 
@@ -24,12 +25,12 @@ setup environment
 
 `REMOTE_IMAGE_URI` is the final URL that your uploaded image will be available at.
 
-run script
+Now you can run the script:
 
     $ snap-copy-paste
 
 If you don't want to assign the environment variables permanently, you can
-assign them ad hoc like this:
+delete `~/.snaprc` and assign them ad hoc like this:
 
     $ REMOTE_IMAGE_URI="http://example.com/images/snaps/" \
         REMOTE_IMAGE_HOST="mywebhost" \
@@ -47,6 +48,8 @@ The easiest way to install imagemagick is to install homebrew and run:
 
     $ brew install libjpeg
     $ brew install imagemagick
+
+A server that can host image files and accept SCP uploads.
 
 ## LICENSE
 
