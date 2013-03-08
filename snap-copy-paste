@@ -1,0 +1,146 @@
+#!/usr/bin/env ruby
+
+# Take a photo with your Mac's built in camera, upload it, and paste it into
+# the current Flint tab.
+#
+# Usage:
+#
+#   # setup environment
+#   $ echo "# this is a YAML config file, don't hack with it" > ~/.snaprc
+#   $ echo 'REMOTE_IMAGE_URI: "http://example.com/images/snaps/"' >> ~/.snaprc
+#   $ echo 'REMOTE_IMAGE_HOST: "mywebhost"' >> ~/.snaprc
+#   $ echo 'REMOTE_IMAGE_PATH: "~/example.com/images/snaps/"' >> ~/.snaprc
+#
+#   # run script
+#   $ snap-copy-paste
+#
+# If you don't want to assign the environment variables permanently, you can
+# assign them ad hoc like this:
+#
+#   REMOTE_IMAGE_URI="http://example.com/images/snaps/" \
+#     REMOTE_IMAGE_HOST="mywebhost" \
+#     REMOTE_IMAGE_PATH="~/example.com/images/snaps/" \
+#     snap-copy-paste
+#
+# snap-copy-paste requires the "imagesnap" app:
+#
+#   wget https://github.com/rharder/imagesnap/raw/master/imagesnap
+#   chmod a+x imagesnap
+#   sudo mv imagesnap /usr/bin/imagesnap
+#
+#   # source available at: https://github.com/rharder/imagesnap
+#
+#
+# If imagemagick is installed, the image will be constrained to 1024x768.
+# The easiest way to install imagemagick is to install homebrew and run:
+#
+#   brew install libjpeg
+#   brew install imagemagick
+#
+
+# load config
+
+config_file = File.expand_path("~/.snaprc")
+if File.exists?(config_file)
+  require 'yaml'
+  configuration = YAML.load File.read(config_file)
+else
+  configuration = {
+    'REMOTE_IMAGE_URI' =>  ENV['REMOTE_IMAGE_URI'],
+    'REMOTE_IMAGE_HOST' => ENV['REMOTE_IMAGE_HOST'],
+    'REMOTE_IMAGE_PATH' => ENV['REMOTE_IMAGE_PATH']
+  }
+end
+
+CONFIGURATION = configuration
+
+def upload_file fname
+  remote_image_uri  = CONFIGURATION['REMOTE_IMAGE_URI']
+  remote_image_host = CONFIGURATION['REMOTE_IMAGE_HOST']
+  remote_image_path = CONFIGURATION['REMOTE_IMAGE_PATH']
+
+  # sanitized remote filename
+  filename = fname.strip
+
+  filename = File.basename(filename)
+
+  # get only the filename, not the whole path
+  filename.gsub!(/^.*(\\|\/)/, '')
+
+  # Finally, replace all non alphanumeric, underscore
+  # or periods with underscore
+  filename.gsub!(/[^\w\.\-]/, '_')
+
+  filename.downcase
+
+  remote_path = File.join remote_image_path, "#{ filename }"
+
+  # copy file to remote
+  `scp '#{ fname }' #{ remote_image_host }:#{ remote_path }`
+
+  # make sure file is readable by web server process
+  `ssh #{ remote_image_host } 'chmod a+r #{ remote_path }'`
+
+  # return new remote URL
+  File.join(remote_image_uri, filename)
+end
+
+def command?(command)
+  system("which #{ command} > /dev/null 2>&1")
+end
+
+filename = Time.now.strftime("%Y-%m-%d-%H-%M-%S_snapshot.jpg")
+
+# take a pic with iSight
+system "imagesnap #{ filename }"
+
+# get the full filepath
+if File.respond_to?(:absolute_path)
+  # ruby 1.9
+  full_name = File.absolute_path(filename)
+else
+  # ruby 1.8
+  require 'pathname'
+  full_name = Pathname.new(filename).realpath
+end
+
+puts %[saved file: #{ full_name }]
+
+# resize to half
+if command?('convert')
+  print 'constraining image...'
+  system %[convert "#{full_name}" -resize '1024x768>' "#{full_name}"]
+  puts ' done'
+end
+
+# upload file and get URL
+print 'uploading image...'
+resulting_url = upload_file(full_name)
+puts  'done'
+
+# copy URL to clipboard
+IO.popen('pbcopy', 'w').print resulting_url
+
+# output URL pointing to uploaded file
+puts resulting_url
+
+# run Applescript pasting the clipboard contents to Flint
+tmpscript = <<-EOF
+tell application "Flint"
+  activate
+  tell application "System Events"
+    keystroke "v" using {command down}
+    key code 36
+  end tell
+end tell
+EOF
+
+system %[osascript -e '#{tmpscript}']
+
+# # Alternatively, you can post a URL to a specific Campfire room using Flint's
+# # built in Applescript support.
+# tmpscript = %[
+# tell application "Flint"
+#   post "#{resulting_url}" to room "Ten Forward"
+# end tell
+# ]
