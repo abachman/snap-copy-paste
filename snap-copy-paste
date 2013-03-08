@@ -80,7 +80,9 @@ resulting_url = upload_file(full_name)
 puts  'done'
 
 # copy URL to clipboard
-IO.popen('pbcopy', 'w').print resulting_url
+IO.popen('pbcopy', 'w') do |io|
+  io.print resulting_url
+end
 
 # output URL pointing to uploaded file
 puts resulting_url
